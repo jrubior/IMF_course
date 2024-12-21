@@ -3,7 +3,7 @@ clear;
 clc;
 
 % Parameters of the SUR model
-T_values = [2, 100, 500, 1000, 5000]; % Different sample sizes
+T_values = [50, 100, 500, 1000, 5000]; % Different sample sizes
 beta_true = [0.5, -0.2; 1.0, 0.8; -0.3, 0.5]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
@@ -32,9 +32,8 @@ for t_idx = 1:length(T_values)
     end
 
     % Stack the system
-    Y_vec = reshape(Y, T * k, 1) % Stacked dependent variable (T*k x 1)
-    X_block = kron(eye(k), X)   % Stacked regressor matrix (T*k x k*p)
-
+    Y_vec = reshape(Y, T * k, 1); % Stacked dependent variable (T*k x 1)
+    X_block = kron(eye(k), X);   % Stacked regressor matrix (T*k x k*p)
 
     % Ordinary Least Squares (OLS) for initialization
     beta_ols = (X_block' * X_block) \ (X_block' * Y_vec);
