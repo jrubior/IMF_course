@@ -26,10 +26,7 @@ for t_idx = 1:length(T_values)
     U = mvnrnd([0, 0], sigma_u, T); % T x 2 matrix of residuals
     
     % Generate dependent variables
-    Y = zeros(T, k);
-    for eq = 1:k
-        Y(:, eq) = X * beta_true(:, eq) + U(:, eq); % Generate data for each equation
-    end
+    Y = X * beta_true + U;
 
     % Stack the system
     Y_vec = reshape(Y, T * k, 1); % Stacked dependent variable (T*k x 1)

@@ -3,8 +3,8 @@ clear;
 clc;
 
 % Parameters of the SUR model
-T_values = [50, 100, 500, 1000, 5000]; % Different sample sizes
-beta_true = [0.5, -0.2; 1.0, 0.8; -0.3, 0.5]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
+T_values = [50 100, 500, 1000, 5000]; % Different sample sizes
+beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
 % Number of equations and regressors
@@ -18,41 +18,39 @@ beta_errors = zeros(length(T_values), k * p);
 % Loop over different sample sizes
 for t_idx = 1:length(T_values)
     T = T_values(t_idx);
-    
-    % Generate regressors
-    X = [ones(1, 1), randn(1, 1), randn(1, 1)]; % Intercept + 2 random regressors
 
+    Y = zeros(T, k);
+    Y(1,:) = [randn(1, 1), randn(1, 1)];
     % Generate error terms with given covariance matrix
     U = mvnrnd([0, 0], sigma_u, T); % T x 2 matrix of residuals
-    
+
     % Generate dependent variables
-    Y = zeros(1, k);
+
 
     for t=2:T
 
-    for eq = 1:k
-        Y(:, eq) = X * beta_true(:, eq) + U(:, eq); % Generate data for each equation
-    end
+        Y(t, :) = [1,Y(t-1,:)] * beta_true + U(t, :);
 
     end
-    
+
+    Ytemp=Y(2:end,:);
+    X=[ones(T-1,1) Y(1:end-1,:)];
+    Y=Ytemp;
+
     % OLS estimation for each equation
-    beta_ols = zeros(p, k);
-    residuals = zeros(T, k);
-    for eq = 1:k
-        beta_ols(:, eq) = (X' * X) \ (X' * Y(:, eq));
-        residuals(:, eq) = Y(:, eq) - X * beta_ols(:, eq);
-    end
-    
+    beta_ols = (X' * X) \ (X' * Y);
+    residuals= Y - X * beta_ols;
+
+
     % Estimate residual covariance matrix
     Sigma_u_hat = (residuals' * residuals) / T;
 
     % Generalized Least Squares (GLS) Estimation
     % Reshape system: Y (T*k x 1), X (T*k x k*p)
-    Y_vec = reshape(Y, T * k, 1);
+    Y_vec = reshape(Y, (T - 1)* k, 1);
     X_block = kron(eye(k), X);
     Sigma_u_inv = inv(Sigma_u_hat);
-    W = kron(Sigma_u_inv, eye(T)); % Weighting matrix
+    W = kron(Sigma_u_inv, eye(T-1)); % Weighting matrix
     beta_gls = (X_block' * W * X_block) \ (X_block' * W * Y_vec);
 
     % Save results
