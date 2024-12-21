@@ -4,12 +4,12 @@ clc;
 
 % Parameters of the SUR model
 T_values = [50, 100, 500, 1000, 5000]; % Different sample sizes
-beta_true = [0.5, 1.0; -0.2, 0.8];    % True coefficients: [beta11 beta12; beta21 beta22]
+beta_true = [0.5, -0.2; 1.0, 0.8; -0.3, 0.5]; % True coefficients: [beta11 beta21; beta12 beta22; beta13 beta23]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
 % Number of equations and regressors
 k = 2; % Number of equations
-p = 2; % Number of regressors (including intercept)
+p = 3; % Number of regressors (including intercept)
 
 % Store results
 beta_estimates = zeros(length(T_values), k * p);
@@ -20,16 +20,15 @@ for t_idx = 1:length(T_values)
     T = T_values(t_idx);
     
     % Generate regressors
-    X = [ones(T, 1), randn(T, 1)]; % First column is intercept, second column is random
+    X = [ones(T, 1), randn(T, 1), randn(T, 1)]; % Intercept + 2 random regressors
 
     % Generate error terms with given covariance matrix
     U = mvnrnd([0, 0], sigma_u, T); % T x 2 matrix of residuals
     
     % Generate dependent variables
     Y = zeros(T, k);
-    for i = 1:T
-        Y(i, 1) = X(i, :) * beta_true(:, 1) + U(i, 1);
-        Y(i, 2) = X(i, :) * beta_true(:, 2) + U(i, 2);
+    for eq = 1:k
+        Y(:, eq) = X * beta_true(:, eq) + U(:, eq); % Generate data for each equation
     end
     
     % OLS estimation for each equation
@@ -79,5 +78,7 @@ end
 xlabel('Sample Size (T)');
 ylabel('Parameter Estimation Error');
 title('Convergence of Parameter Estimates');
-legend('Beta11', 'Beta12', 'Beta21', 'Beta22');
+legend('Beta11', 'Beta12', 'Beta13', 'Beta21', 'Beta22', 'Beta23');
 grid on;
+
+
