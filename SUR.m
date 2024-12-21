@@ -4,7 +4,7 @@ clc;
 
 % Parameters of the SUR model
 T_values = [50, 100, 500, 1000, 5000]; % Different sample sizes
-beta_true = [0.5, -0.2; 1.0, 0.8; -0.3, 0.5]; % True coefficients: [beta11 beta21; beta12 beta22; beta13 beta23]
+beta_true = [0.5, -0.2; 1.0, 0.8; -0.3, 0.5]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
 % Number of equations and regressors
@@ -30,24 +30,24 @@ for t_idx = 1:length(T_values)
     for eq = 1:k
         Y(:, eq) = X * beta_true(:, eq) + U(:, eq); % Generate data for each equation
     end
-    
-    % OLS estimation for each equation
-    beta_ols = zeros(p, k);
-    residuals = zeros(T, k);
-    for eq = 1:k
-        beta_ols(:, eq) = (X' * X) \ (X' * Y(:, eq));
-        residuals(:, eq) = Y(:, eq) - X * beta_ols(:, eq);
-    end
-    
+
+    % Stack the system
+    Y_vec = reshape(Y, T * k, 1); % Stacked dependent variable (T*k x 1)
+    X_block = kron(eye(k), X);   % Stacked regressor matrix (T*k x k*p)
+
+    % Ordinary Least Squares (OLS) for initialization
+    beta_ols = (X_block' * X_block) \ (X_block' * Y_vec);
+
+    % Residual calculation
+    residuals = Y_vec - X_block * beta_ols;
+    residual_matrix = reshape(residuals, T, k); % Reshape residuals into T x k
+
     % Estimate residual covariance matrix
-    Sigma_u_hat = (residuals' * residuals) / T;
+    Sigma_u_hat = (residual_matrix' * residual_matrix) / T;
 
     % Generalized Least Squares (GLS) Estimation
-    % Reshape system: Y (T*k x 1), X (T*k x k*p)
-    Y_vec = reshape(Y, T * k, 1);
-    X_block = kron(eye(k), X);
     Sigma_u_inv = inv(Sigma_u_hat);
-    W = kron(Sigma_u_inv, eye(T)); % Weighting matrix
+    W = kron(Sigma_u_inv, eye(T)); % Weighting matrix for GLS
     beta_gls = (X_block' * W * X_block) \ (X_block' * W * Y_vec);
 
     % Save results
@@ -80,5 +80,4 @@ ylabel('Parameter Estimation Error');
 title('Convergence of Parameter Estimates');
 legend('Beta11', 'Beta12', 'Beta13', 'Beta21', 'Beta22', 'Beta23');
 grid on;
-
 
