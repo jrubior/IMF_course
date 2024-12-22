@@ -1,5 +1,5 @@
 close all
-clear all
+clear
 clc
 T = 1000;
 n_draws=100000;
