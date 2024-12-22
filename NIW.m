@@ -1,5 +1,5 @@
-T = 10000;
-n_draws=100;
+T = 1000;
+n_draws=100000;
 
 beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
@@ -68,3 +68,20 @@ draws{i,1}     = Bdraw;
 draws{i,2} = Sigmadraw;
 
 end
+
+around=.15;
+
+figure;
+for i = 1:2
+    for j = 1:2
+        subplot(2, 2, (i-1)*2 + j);
+        sigma_draws = cellfun(@(x) x(i, j), draws(:, 2));
+        histogram(sigma_draws, 30);
+        hold on;
+        xline(sigma_u(i, j), 'r', 'LineWidth', 2);
+        xlim([sigma_u(i, j) - around, sigma_u(i, j) + around]);
+        title(['\sigma_{' num2str(i) ',' num2str(j) '}']);
+        hold off;
+    end
+end
+
