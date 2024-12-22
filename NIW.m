@@ -64,8 +64,8 @@ Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
 cholSigmadraw = hh(Sigmadraw)';
 Bdraw         = kron(cholSigmadraw,cholOomegaTilde)*randn(m*n,1) + reshape(PpsiTilde,n*m,1);
 Bdraw         = reshape(Bdraw,n*p+nex,n);
-draws{i,1}     = Bdraw;
-draws{i,2} = Sigmadraw;
+draws{i,1}    = Bdraw;
+draws{i,2}    = Sigmadraw;
 
 end
 
@@ -86,3 +86,26 @@ for i = 1:2
 end
 
 
+figure;
+i=1;
+for j = 1:2
+subplot(3, 2, (i-1)*2 + j);
+beta_draws = cellfun(@(x) x(i, j), draws(:, 1));
+histogram(beta_draws, 30);
+hold on;
+xline(beta_true(i, j), 'r', 'LineWidth', 2);
+xlim([beta_true(i, j) - around, beta_true(i, j) + around]);
+title(['c_{' num2str(j) '}']);
+end
+for i = 2:3
+    for j = 1:2
+        subplot(3, 2, (i-1)*2 + j);
+        beta_draws = cellfun(@(x) x(i, j), draws(:, 1));
+        histogram(beta_draws, 30);
+        hold on;
+        xline(beta_true(i, j), 'r', 'LineWidth', 2);
+        xlim([beta_true(i, j) - around, beta_true(i, j) + around]);
+        title(['\beta_{' num2str(i-1) ',' num2str(j) '}']);
+        hold off;
+    end
+end
