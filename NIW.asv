@@ -1,5 +1,4 @@
 T = 10000;
-
 beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
@@ -11,11 +10,8 @@ m   = n*p + nex;    % number of independent variables
 e  = eye(n);        % create identity matrix
 
 Y = zeros(T, n);
-
 Y(1,:) = [randn(1, 1), randn(1, 1)];
-
 % Generate error terms with given covariance matrix
-
 U = mvnrnd([0, 0], sigma_u, T); % T x 2 matrix of residuals
 
 % Generate dependent variables
