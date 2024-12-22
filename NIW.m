@@ -51,9 +51,6 @@ hh       = @(x)chol(x);
 
 cholOomegaTilde=hh(OomegaTilde)'; % this matrix is used to draw B|Sigma below
 
-
-
-
 %% drawing Sigma and B|Sigma
 
 draws=cell([n_draws,2]);
