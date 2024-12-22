@@ -1,3 +1,6 @@
+close all
+clear all
+clc
 T = 1000;
 n_draws=100000;
 
