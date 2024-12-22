@@ -38,7 +38,7 @@ PpsiBar             = zeros(m,n);
 PphiBar             = zeros(n);
 
 %% posterior for reduced-form parameters
-nnuTilde            = T +nnuBar
+nnuTilde            = T +nnuBar;
 OomegaTilde         = (X'*X  + OomegaBarInverse)\eye(m);
 OomegaTildeInverse  =  X'*X  + OomegaBarInverse;
 PpsiTilde           = OomegaTilde*(X'*Y + OomegaBarInverse*PpsiBar);
@@ -51,5 +51,3 @@ PphiTilde           = (PphiTilde'+PphiTilde)*0.5
 
 %% drawing Sigma and B|Sigma
 Sigmadraw     = iwishrnd(PphiTilde,nnuTilde)
-
-PphiTilde/(nnuTilde-n-1)yt
