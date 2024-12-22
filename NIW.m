@@ -1,4 +1,5 @@
 T = 10000;
+n_draws=100;
 
 beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
@@ -27,7 +28,8 @@ for t=2:T
 end
 
 Ytemp=Y(2:end,:);
-X=[ones(T-1,1) Y(1:end-1,:)];
+X=[Y(1:end-1,:) ones(T-1,1)]; % this is the notation used in the SUR
+X=[ones(T-1,1) Y(1:end-1,:) ]; % this is the notation used in our papers
 Y=Ytemp;
 
 
@@ -43,11 +45,26 @@ OomegaTilde         = (X'*X  + OomegaBarInverse)\eye(m);
 OomegaTildeInverse  =  X'*X  + OomegaBarInverse;
 PpsiTilde           = OomegaTilde*(X'*Y + OomegaBarInverse*PpsiBar);
 PphiTilde           = Y'*Y + PphiBar + PpsiBar'*OomegaBarInverse*PpsiBar - PpsiTilde'*OomegaTildeInverse*PpsiTilde;
-PphiTilde           = (PphiTilde'+PphiTilde)*0.5
+PphiTilde           = (PphiTilde'+PphiTilde)*0.5;
 
+hh       = @(x)chol(x);
+
+cholOomegaTilde=hh(OomegaTilde)'; % this matrix is used to draw B|Sigma below
 
 
 
 
 %% drawing Sigma and B|Sigma
-Sigmadraw     = iwishrnd(PphiTilde,nnuTilde)
+
+draws=cell([n_draws,2]);
+
+for i=1:n_draws
+
+Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
+cholSigmadraw = hh(Sigmadraw)';
+Bdraw         = kron(cholSigmadraw,cholOomegaTilde)*randn(m*n,1) + reshape(PpsiTilde,n*m,1);
+Bdraw         = reshape(Bdraw,n*p+nex,n);
+draws{i,1}     = Bdraw;
+draws{i,2} = Sigmadraw;
+
+end
