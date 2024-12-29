@@ -8,7 +8,7 @@ beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; bet
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
 
-p   = 2;            % number of lags
+p   = 1;            % number of lags
 n   = 2;            % number of endogenous variables
 nex = 1;            % set equal to 1 if a constant is included; 0 otherwise
 m   = n*p + nex;    % number of independent variables
@@ -32,12 +32,7 @@ end
 
 Ytemp=Y(2:end,:);
 X=[Y(1:end-1,:) ones(T-1,1)]; % this is the notation used in the SUR
-X=[ones(T-2,1) Y(1:end-2,:)]; % this is the notation used in our papers
-%Y=Ytemp;
-
-Ytemp=Y(3:end,:);
-X=[Y(1:end-1,:) ones(T-1,1)]; % this is the notation used in the SUR
-X=[ones(T-2,1) Y(1:end-2,:) Y(2:end-1,:)]; % this is the notation used in our papers
+X=[ones(T-1,1) Y(1:end-1,:)]; % this is the notation used in our papers
 Y=Ytemp;
 
 
@@ -67,7 +62,7 @@ Ldraws=cell([n_draws,p+1]);
 
 for i=1:n_draws
 
-    Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
+    Sigmadraw     = iwishrnd(PphiTilde,nnuTilde)
     cholSigmadraw = hh(Sigmadraw)';
     Bdraw         = kron(cholSigmadraw,cholOomegaTilde)*randn(m*n,1) + reshape(PpsiTilde,n*m,1);
     Bdraw         = reshape(Bdraw,n*p+nex,n);
@@ -75,19 +70,11 @@ for i=1:n_draws
     draws{i,2}    = Sigmadraw;
     draws{i,3}    = DrawQ(n);
 
-    Adraws{i,1}=cholSigmadraw\draws{i,3};
+    Adraws{i,1}=hh(draws{i,2})\draws{i,3};
     Adraws{i,2}=draws{i,1}*Adraws{i,1};
 
-    Ldraws{i,1}=cholSigmadraw'*draws{i,3};
-    j1=1;
-    for j=2:p+1
-        for jj=2:j
-            Ldraws{i,j}=Bdraw(j1+1:j1+n,:)*Ldraws{i,jj-1};
-        end
-        j1=j1+n;
-    end
-
-
+    Ldraws{i,1}=hh(draws{i,2})'*draws{i,3};
+    Ldraws{i,2}=draws{i,1}(nex+1:nex+2,:)'*Ldraws{i,1};
 
 end
 
