@@ -13,9 +13,9 @@ rng(0);         % set seed
 message = 'Please wait while Panel (b) of Figure (1) is being replicated ... ';
 disp(message);
 
-currdir=pwd;
+currdir='/Users/jrubior/Documents/GitHub/IMF_course/replication_files_v5.0/figure_1_panel_b';
 cd ..
-get_help_dir_currdir=pwd;
+get_help_dir_currdir='/Users/jrubior/Documents/GitHub/IMF_course/replication_files_v5.0';
 addpath([get_help_dir_currdir,'/helpfunctions']); % set path to helper functions
 cd(currdir)
 
@@ -39,13 +39,13 @@ nlag      = 4;               % number of lags
 nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
-nd        = 3e4;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
-iter_show = 1000;            % display iteration every iter_show draws
+nd        = 1e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
+iter_show = 1e3;            % display iteration every iter_show draws
 horizon   = 40;              % maximum horizon for IRFs
 index     = 40;              % define  horizons for the FEVD
 NS        = 1;               % number of objects in F(THETA) to which we impose sign and zero restrictios: F(THETA)=[L_{0}]
 e         = eye(nvar);       % create identity matrix
-maxdraws  = 1e4;             % max number of importance sampling draws
+maxdraws  = 1e2;             % max number of importance sampling draws
 conjugate = 'structural';    % structural or irfs or empty
 
 %==========================================================================
@@ -147,6 +147,7 @@ Qdraws         = cell([nd,1]); % orthogonal matrices
 storevefh      = zeros(nd,1);  % volume element f_{h}
 storevegfhZ    = zeros(nd,1);  % volume element g o f_{h}|Z
 uw             = zeros(nd,1);  % unnormalized importance sampler weights
+structuraldraws  = zeros(nd,nvar*nvar+nvar*m); % structural lag parameters
 
 if strcmp(conjugate,'irfs')==1
     storevephi      = zeros(nd,1);  % volume element f_{h}
@@ -171,7 +172,11 @@ counter = 1;
 record  = 1;
 count   = 0;
 
+tic
+
 while record<=nd
+
+
     
     
     %% step 1 in Algorithm 2
@@ -188,6 +193,7 @@ while record<=nd
     w           = DrawW(info);   
     x           = [vec(Bdraw); vec(Sigmadraw); w];
     structpara  = ff_h_inv(x,info);
+    structuraldraws(record,:) = structpara;
     
     % store the matrix Q associated with step 3
     Qdraw            = SpheresToQ(w,info,Bdraw,Sigmadraw);
@@ -216,7 +222,7 @@ while record<=nd
             case 'irfs'
                 
                 irfpara                = fo_str2irfs(structpara);
-                storevephi(record,1)   = LogVolumeElement(fo,structpara)   + LogVolumeElement(fo_str2irfs_inv,irfpara);%log(2)*nvar*(nvar+1)/2 - LogAbsDet(inv(reshape(structpara(1:nvar*nvar),nvar,nvar)*reshape(structpara(1:nvar*nvar),nvar,nvar)'))*(2*nvar*nlag-m-1)/2;
+                storevephi(record,1)   = LogVolumeElement(fo,structpara)   + LogVolumeElement(fo_str2irfs_inv,irfpara);
                 storevegphiZ(record,1) = LogVolumeElement(fs,structpara,r) + LogVolumeElement(fo_str2irfs_inv,irfpara,r_irfs); 
                 uw(record,1)           = exp(storevephi(record,1) - storevegphiZ(record,1));
                 
@@ -233,6 +239,9 @@ while record<=nd
     end
     
     if counter==iter_show
+
+        toc
+        tic 
         
         display(['Number of draws = ',num2str(record)])
         display(['Remaining draws = ',num2str(nd-(record))])
@@ -307,5 +316,37 @@ store_results_and_plot_IRFs;
 
 message = 'Done.';
 disp(message);
+
+%% Neural Network Toolbox
+
+nonzero_idx = storevefh ~= 0;
+
+% Keep only the rows where y is nonzero
+y = storevefh(nonzero_idx, :);
+x = structuraldraws(nonzero_idx, :);
+
+nx=size(x,2);
+
+% Define Neural Network Architecture
+layers = [
+    featureInputLayer(nx)                    % Input layer (1 feature)
+    fullyConnectedLayer(10)                  % Hidden layer with 10 neurons                 % Another hidden layer
+    reluLayer      
+    fullyConnectedLayer(10)                  % Hidden layer with 10 neurons                 % Another hidden layer
+    reluLayer                             % Activation function
+    fullyConnectedLayer(1)                    % Output layer (1 neuron)
+    regressionLayer                           % Regression output
+];
+
+% Specify Training Options
+options = trainingOptions('adam', ...
+    'MaxEpochs', 100, ...
+    'MiniBatchSize', 10, ...
+    'InitialLearnRate', 0.01, ...
+    'Plots', 'training-progress', ...
+    'Verbose', false);
+
+% Train the Network
+net = trainNetwork(x, y, layers, options);
 
 
