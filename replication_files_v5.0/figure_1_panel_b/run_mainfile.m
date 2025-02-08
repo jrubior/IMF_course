@@ -342,67 +342,20 @@ lambda = 0.01;    % Decay rate
 numEpochs = 50;   % Total training epochs
 miniBatchSize = 2^11;
 
-% initialLR = 0.1;  % Initial Learning Rate
-% lambda = 0.01;    % Decay Rate
-% numEpochs = 50;   % Number of Epochs
 
 % Specify Training Options
-% options = trainingOptions('adam', ...
-%     'MaxEpochs', numEpochs, ...
-%     'MiniBatchSize', 2^14, ...
-%     'InitialLearnRate', initialLR, ...
-%     'Verbose', true);
+ options = trainingOptions('adam', ...
+     'MaxEpochs', numEpochs, ...
+     'MiniBatchSize', miniBatchSize, ...
+     'InitialLearnRate', initialLR, ...
+     'Verbose', true);
 
 % Train the Network
-% net = trainNetwork(x, y, layers, options);
-
-
-
-% for epoch = 1:numEpochs
-%     % Compute new learning rate
-%     newLR = initialLR * exp(-lambda * epoch);
-    
-%     % Update learning rate in training options
-%     options.InitialLearnRate = newLR;
-    
-%     % Retrain the network with updated learning rate
-%     net = trainNetwork(x, y, layers, options);
-% end
-
-
-% net = dlnetwork(layerGraph(layers)); % Convert to a deep learning network for custom training
-
-learningRateSchedule = @(epoch) initialLR * exp(-lambda * epoch);
-
-% Define Training Options with a Learning Rate Schedule
-options = trainingOptions('sgdm', ...
-    'InitialLearnRate', initialLR, ...
-    'MaxEpochs', numEpochs, ...
-    'MiniBatchSize', miniBatchSize, ...
-    'Verbose', true, ...
-    'Shuffle', 'every-epoch', ...
-    'OutputFcn', @(info) updateLearningRate(info, learningRateSchedule));
-
-%% Train the Network
 net = trainNetwork(x, y, layers, options);
 
-%% Custom Learning Rate Update Function
-function stop = updateLearningRate(info, learningRateSchedule)
-    stop = false;  % Allow training to continue
-    if info.State == "iteration"
-        % Compute new learning rate based on the current epoch
-        newLR = learningRateSchedule(info.Epoch);
-        
-        % Update the learning rate in the optimizer
-        info.TrainingOptions.InitialLearnRate = newLR;
-        
-        % Display learning rate update
-        fprintf('Epoch %d: Updated Learning Rate = %.6f\n', info.Epoch, newLR);
-    end
-end
-
-
 save('net.mat', 'net');
+
+
 
 
 

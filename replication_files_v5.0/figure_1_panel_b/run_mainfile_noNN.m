@@ -335,3 +335,4 @@ title('Neural Network Forecast vs Actual');
 grid on;
 
 
+corrcoef(y_new, y_pred)
