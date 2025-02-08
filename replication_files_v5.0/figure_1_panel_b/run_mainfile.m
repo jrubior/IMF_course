@@ -39,7 +39,7 @@ nlag      = 4;               % number of lags
 nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
-nd        = 1e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
+nd        = 1e5;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
 iter_show = 1e3;            % display iteration every iter_show draws
 horizon   = 40;              % maximum horizon for IRFs
 index     = 40;              % define  horizons for the FEVD
@@ -331,22 +331,78 @@ nx=size(x,2);
 layers = [
     featureInputLayer(nx)                    % Input layer (1 feature)
     fullyConnectedLayer(10)                  % Hidden layer with 10 neurons                 % Another hidden layer
-    reluLayer      
-    fullyConnectedLayer(10)                  % Hidden layer with 10 neurons                 % Another hidden layer
+             % Hidden layer with 10 neurons                 % Another hidden layer
     reluLayer                             % Activation function
     fullyConnectedLayer(1)                    % Output layer (1 neuron)
     regressionLayer                           % Regression output
 ];
 
+initialLR = 0.1;  % Initial learning rate
+lambda = 0.01;    % Decay rate
+numEpochs = 50;   % Total training epochs
+miniBatchSize = 2^11;
+
+% initialLR = 0.1;  % Initial Learning Rate
+% lambda = 0.01;    % Decay Rate
+% numEpochs = 50;   % Number of Epochs
+
 % Specify Training Options
-options = trainingOptions('adam', ...
-    'MaxEpochs', 100, ...
-    'MiniBatchSize', 10, ...
-    'InitialLearnRate', 0.01, ...
-    'Plots', 'training-progress', ...
-    'Verbose', false);
+% options = trainingOptions('adam', ...
+%     'MaxEpochs', numEpochs, ...
+%     'MiniBatchSize', 2^14, ...
+%     'InitialLearnRate', initialLR, ...
+%     'Verbose', true);
 
 % Train the Network
+% net = trainNetwork(x, y, layers, options);
+
+
+
+% for epoch = 1:numEpochs
+%     % Compute new learning rate
+%     newLR = initialLR * exp(-lambda * epoch);
+    
+%     % Update learning rate in training options
+%     options.InitialLearnRate = newLR;
+    
+%     % Retrain the network with updated learning rate
+%     net = trainNetwork(x, y, layers, options);
+% end
+
+
+% net = dlnetwork(layerGraph(layers)); % Convert to a deep learning network for custom training
+
+learningRateSchedule = @(epoch) initialLR * exp(-lambda * epoch);
+
+% Define Training Options with a Learning Rate Schedule
+options = trainingOptions('sgdm', ...
+    'InitialLearnRate', initialLR, ...
+    'MaxEpochs', numEpochs, ...
+    'MiniBatchSize', miniBatchSize, ...
+    'Verbose', true, ...
+    'Shuffle', 'every-epoch', ...
+    'OutputFcn', @(info) updateLearningRate(info, learningRateSchedule));
+
+%% Train the Network
 net = trainNetwork(x, y, layers, options);
+
+%% Custom Learning Rate Update Function
+function stop = updateLearningRate(info, learningRateSchedule)
+    stop = false;  % Allow training to continue
+    if info.State == "iteration"
+        % Compute new learning rate based on the current epoch
+        newLR = learningRateSchedule(info.Epoch);
+        
+        % Update the learning rate in the optimizer
+        info.TrainingOptions.InitialLearnRate = newLR;
+        
+        % Display learning rate update
+        fprintf('Epoch %d: Updated Learning Rate = %.6f\n', info.Epoch, newLR);
+    end
+end
+
+
+save('net.mat', 'net');
+
 
 
