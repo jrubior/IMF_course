@@ -340,7 +340,7 @@ layers = [
 initialLR = 0.1;  % Initial learning rate
 lambda = 0.01;    % Decay rate
 numEpochs = 50;   % Total training epochs
-miniBatchSize = 2^11;
+miniBatchSize = 2^13;
 
 
 % Specify Training Options
@@ -355,7 +355,7 @@ miniBatchSize = 2^11;
 % Train the Network
 net = trainNetwork(x, y, layers, options);
 
-save('net.mat', 'net');
+save('net.mat', 'net', 'x', 'y');
 
 
 % Retrain the Network
