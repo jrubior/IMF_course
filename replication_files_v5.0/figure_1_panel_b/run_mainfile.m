@@ -348,12 +348,20 @@ miniBatchSize = 2^11;
      'MaxEpochs', numEpochs, ...
      'MiniBatchSize', miniBatchSize, ...
      'InitialLearnRate', initialLR, ...
+     'LearnRateSchedule', 'piecewise', ...
+     'Shuffle', 'every-epoch', ...
      'Verbose', true);
 
 % Train the Network
 net = trainNetwork(x, y, layers, options);
 
 save('net.mat', 'net');
+
+
+% Retrain the Network
+[net, info] = trainNetwork(x, y, net.Layers, options);
+loss_save=info.TrainingRMSE(end)
+
 
 
 
