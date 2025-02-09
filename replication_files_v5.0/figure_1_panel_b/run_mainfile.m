@@ -40,7 +40,6 @@ nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
 nd        = 1e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
-iter_show = 1e3;            % display iteration every iter_show draws
 horizon   = 40;              % maximum horizon for IRFs
 index     = 40;              % define  horizons for the FEVD
 NS        = 1;               % number of objects in F(THETA) to which we impose sign and zero restrictios: F(THETA)=[L_{0}]
@@ -174,10 +173,8 @@ count   = 0;
 
 tic
 
-while record<=nd
+parfor record=1:nd
 
-
-    
     
     %% step 1 in Algorithm 2
     Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
@@ -238,133 +235,25 @@ while record<=nd
         
     end
     
-    if counter==iter_show
-
-        toc
-        tic 
         
-        display(['Number of draws = ',num2str(record)])
-        display(['Remaining draws = ',num2str(nd-(record))])
-        counter =0;
-        
-    end
-    counter = counter + 1;
-    
-    record=record+1;
-    
 end
 toc
-
-
-% compute the normalized weights and estimate the effective sample size of the importance sampler
-imp_w  = uw/sum(uw);
-ne     = floor(1/sum(imp_w.^2));
-
-
-%% useful definitions to store relevant objects
-A0tilde       = zeros(nvar,nvar,ne);               % define array to store A0
-Aplustilde    = zeros(m,nvar,ne);                  % define array to store Aplus
-Ltilde        = zeros(horizon+1,nvar,nvar,ne);     % define array to store IRF
-FEVD          = zeros(nvar,ne);                 % define array to store FEVD
-% initialize counter to track the state of the importance sampler
-count_IRF     = 0;
-for s=1:min(ne,maxdraws)
-    
-    %% draw: B,Sigma,Q
-    is_draw     = randsample(1:size(imp_w,1),1,true,imp_w);
-    Bdraw       = Bdraws{is_draw,1};
-    Sigmadraw   = Sigmadraws{is_draw,1};
-    Qdraw       = Qdraws{is_draw,1};
-    
-    x          = [reshape(Bdraw,m*nvar,1); reshape(Sigmadraw,nvar*nvar,1); Qdraw(:)];
-    structpara = f_h_inv(x,info);
-    
-
-    LIRF = IRF_horizons(structpara, nvar, nlag, m, 0:horizon);
-    
-    for h=0:horizon
-        Ltilde(h+1,:,:,s) =  LIRF(1+h*nvar:(h+1)*nvar,:);
-    end
-    
-    % FEVD
-    % compute matrix F: useful for FEVD
-    hSigmadraw = hh(Sigmadraw);
-    A0         = hSigmadraw\e;
-    Aplus      = Bdraw*A0;
-    % Page 8 ARRW
-    for l=1:nlag-1
-        A{l} = Aplus((l-1)*nvar+1:l*nvar,1:end);
-        F((l-1)*nvar+1:l*nvar,1:nvar)=A{l}/A0;
-    end
-    A{nlag} = Aplus((nlag-1)*nvar+1:nlag*nvar,1:end);
-    F((nlag-1)*nvar+1:nlag*nvar,:)=[A{nlag}/A0 extraF];
-    
-    FEVD(:,s)         = variancedecomposition(F',J,Sigmadraw, hh(Sigmadraw)'*Qdraw(:,1),nvar,index);
-    
-    % store weighted independent draws
-    A0tilde(:,:,s)    = reshape(structpara(1:nvar*nvar),nvar,nvar);
-    Aplustilde(:,:,s) = reshape(structpara(nvar*nvar+1:end),m,nvar);
-    
-end
-A0tilde    = A0tilde(:,:,1:s);
-Aplustilde = Aplustilde(:,:,1:s);
-Ltilde     = Ltilde(:,:,:,1:s);
-FEVD       = FEVD(:,1:s);
-
-addpath('results/plothelpfunctions'); 
-store_results_and_plot_IRFs;
-
-message = 'Done.';
-disp(message);
 
 %% Neural Network Toolbox
 
 nonzero_idx = storevefh ~= 0;
 
 % Keep only the rows where y is nonzero
-y = storevefh(nonzero_idx, :);
-y1 = storevegfhZ(nonzero_idx, :);
-y2 = uw(nonzero_idx, :);
-x = structuraldraws(nonzero_idx, :);
+yy = storevefh(nonzero_idx, :);
+yy1 = storevegfhZ(nonzero_idx, :);
+yy2 = uw(nonzero_idx, :);
+xx = structuraldraws(nonzero_idx, 1:25);
 
-load net.mat
+save('datadata.mat', 'xx', 'yy', 'yy1', 'yy2');
 
-nx=size(x,2);
-
-% Define Neural Network Architecture
-layers = [
-    featureInputLayer(nx)                    % Input layer (1 feature)
-    fullyConnectedLayer(10)                  % Hidden layer with 10 neurons                 % Another hidden layer
-             % Hidden layer with 10 neurons                 % Another hidden layer
-    reluLayer                             % Activation function
-    fullyConnectedLayer(1)                    % Output layer (1 neuron)
-    regressionLayer                           % Regression output
-];
-
-initialLR = 0.1;  % Initial learning rate
-lambda = 0.01;    % Decay rate
-numEpochs = 50;   % Total training epochs
-miniBatchSize = 2^13;
-
-
-% Specify Training Options
- options = trainingOptions('adam', ...
-     'MaxEpochs', numEpochs, ...
-     'MiniBatchSize', miniBatchSize, ...
-     'InitialLearnRate', initialLR, ...
-     'LearnRateSchedule', 'piecewise', ...
-     'Shuffle', 'every-epoch', ...
-     'Verbose', true);
-
-% Train the Network
-net = trainNetwork(x, y, layers, options);
-
-save('net.mat', 'net', 'x', 'y', 'y1', 'y2');
-
-
-% Retrain the Network
-[net, info] = trainNetwork(x, y, net.Layers, options);
-loss_save=info.TrainingRMSE(end)
+% % Retrain the Network
+% [net, info] = trainNetwork(x, y, net.Layers, options);
+% loss_save=info.TrainingRMSE(end)
 
 
 
