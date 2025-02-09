@@ -39,7 +39,7 @@ nlag      = 4;               % number of lags
 nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
-nd        = 1e5;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
+nd        = 1e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
 iter_show = 1e3;            % display iteration every iter_show draws
 horizon   = 40;              % maximum horizon for IRFs
 index     = 40;              % define  horizons for the FEVD
@@ -323,7 +323,11 @@ nonzero_idx = storevefh ~= 0;
 
 % Keep only the rows where y is nonzero
 y = storevefh(nonzero_idx, :);
+y1 = storevegfhZ(nonzero_idx, :);
+y2 = uw(nonzero_idx, :);
 x = structuraldraws(nonzero_idx, :);
+
+load net.mat
 
 nx=size(x,2);
 
@@ -355,7 +359,7 @@ miniBatchSize = 2^13;
 % Train the Network
 net = trainNetwork(x, y, layers, options);
 
-save('net.mat', 'net', 'x', 'y');
+save('net.mat', 'net', 'x', 'y', 'y1', 'y2');
 
 
 % Retrain the Network
