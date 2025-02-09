@@ -39,7 +39,7 @@ nlag      = 4;               % number of lags
 nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
-nd        = 1e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
+nd        = 2e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
 horizon   = 40;              % maximum horizon for IRFs
 index     = 40;              % define  horizons for the FEVD
 NS        = 1;               % number of objects in F(THETA) to which we impose sign and zero restrictios: F(THETA)=[L_{0}]
