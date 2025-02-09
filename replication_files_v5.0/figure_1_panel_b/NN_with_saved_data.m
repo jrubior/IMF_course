@@ -11,13 +11,13 @@ traindim=round(nxx*traindimvalue);
 checkdim=nxx-traindim;
 
 % Create a pattern recognition network
-hiddenLayerSize = [10 10];
+hiddenLayerSize = 20;
 net = feedforwardnet(hiddenLayerSize);
 
 % Setup Division of Data for Training, Validation, Testing
-net.divideParam.trainRatio = 0.7; % 70% for training
-net.divideParam.valRatio = 0.15;  % 15% for validation
-net.divideParam.testRatio = 0.15; % 15% for testing
+net.divideParam.trainRatio = 0.8; % 70% for training
+net.divideParam.valRatio = 0.1;  % 15% for validation
+net.divideParam.testRatio = 0.1; % 15% for testing
 
 xx=xx';
 yy=yy';
@@ -27,22 +27,22 @@ yy2=yy2';
 xxtrain=xx(:,1:traindim);
 yytrain=yy(:,1:traindim);
 yy1train=yy1(:,1:traindim);
-yy2train=yy2(:,1:traindim);
+yy2train=log(yy2(:,1:traindim));
 
 % Train the Network
 
-[net,tr] = train(net,xxtrain,yytrain,'useParallel','yes');
+[net,tr] = train(net,xxtrain,yy2train,'useParallel','yes');
 
 xxtest=xx(:,traindim+1:end);
 yytest=yy(:,traindim+1:end);
 yy1test=yy1(:,traindim+1:end);
-yy2test=yy2(:,traindim+1:end);
+yy2test=log(yy2(:,traindim+1:end));
 
 yynet=zeros(1,size(xxtest,2));
 
 for i=1:size(xxtest,2)
 
-    yynet(1,i)=net(xxtest(:,i));
+    yy2net(1,i)=net(xxtest(:,i));
 
 end
 
@@ -50,12 +50,12 @@ errornet=abs(yytest-yynet);
 toc
 
 close all
-plot(1:size(xxtest,2),yytest,'color','r');
+plot(1:size(xxtest,2),yy2test,'color','r');
 hold on
-plot(1:size(xxtest,2),yynet,'color','b');
+plot(1:size(xxtest,2),yy2net,'color','b');
 
 
-corr(yytest',yynet')
+corr(yy2test',yy2net')
 
 
 
