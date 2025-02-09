@@ -40,37 +40,31 @@ nvar      = 5;               % number of endogenous variables
 nex       = 1;               % set equal to 1 if a constant is included; 0 otherwise
 m         = nvar*nlag + nex; % number of exogenous variables
 nd        = 2e6;             % number of orthogonal-reduced-form (B,Sigma,Q) draws
-NS        = 1;               % number of objects in F(THETA) to which we impose sign and zero restrictios: F(THETA)=[L_{0}]
 e         = eye(nvar);       % create identity matrix
-maxdraws  = 1e2;             % max number of importance sampling draws
 conjugate = 'structural';    % structural or irfs or empty
+horizons  = 0;
 
 %==========================================================================
 %% identification: declare Ss and Zs matrices
 %==========================================================================
-% restrictions on IRFs
-% horizons to restrict
-horizons = 0;
 
 % sign restrictions
 S = cell(nvar,1);
 for ii=1:nvar
-    S{ii}=zeros(0,nvar*NS);
+    S{ii}=zeros(0,nvar);
 end
 ns1  = 1; % ns_{1}  = 1  positive sign restriction on the contemporanouos response of Stock Prices (variable 2) to a unit optimism shock
-S{1} = zeros(ns1,nvar*NS);
+S{1} = zeros(ns1,nvar);
 S{1}(1,2) = 1;
-
-
 
 % zero restrictions
 Z=cell(nvar,1);
 for i=1:nvar
-    Z{i}=zeros(0,numel(  horizons)*nvar);
+    Z{i}=zeros(0,nvar);
 end
 
 nz1=1; % nz_{1}  = 1 zero restriction on the contemporanouos response of TFP (variable 1) to a unit optimism shock
-Z{1}=zeros(nz1,numel(horizons)*nvar);
+Z{1}=zeros(nz1,nvar);
 Z{1}(1,1)=1;
 
 
@@ -151,28 +145,15 @@ if strcmp(conjugate,'irfs')==1
     storevegphiZ    = zeros(nd,1);  % volume element g o f_{h}|Z
 end
 
-% definitions related to IRFs; based on page 12 of Rubio, Waggoner, and Zha (RES 2010)
-J      = [e;repmat(zeros(nvar),nlag-1,1)];
-A      = cell(nlag,1);
-extraF = repmat(zeros(nvar),1,nlag-1);
-F      = zeros(nlag*nvar,nlag*nvar);
-for l=1:nlag-1
-    F((l-1)*nvar+1:l*nvar,nvar+1:nlag*nvar)=[repmat(zeros(nvar),1,l-1) e repmat(zeros(nvar),1,nlag-(l+1))];
-end
-
 % definition to facilitate the draws from B|Sigma
 hh              = info.h;
 cholOomegaTilde = hh(OomegaTilde)'; % this matrix is used to draw B|Sigma below
 
 %% initialize counters to track the state of the computations
-counter = 1;
-record  = 1;
-count   = 0;
 
 tic
 
 parfor record=1:nd
-
     
     %% step 1 in Algorithm 2
     Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
@@ -200,9 +181,7 @@ parfor record=1:nd
     
     
     if (sum(signs>0))==size(signs,1)
-        
-        count=count+1;
-  
+          
         %% compute importance sampling weights
         
         switch conjugate
@@ -226,10 +205,6 @@ parfor record=1:nd
                 uw(record,1) = 1;
                 
         end
-        
-    else
-        
-        uw(record,1) = 0;
         
     end
     

@@ -154,9 +154,6 @@ cholOomegaTilde = hh(OomegaTilde)'; % this matrix is used to draw B|Sigma below
 tic
 
 parfor record=1:nd
-
-    record
-
     
     %% step 1 in Algorithm 2
     Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
@@ -208,10 +205,6 @@ parfor record=1:nd
                 uw(record,1) = 1;
                 
         end
-        
-    else
-        
-        uw(record,1) = 0;
         
     end
     
