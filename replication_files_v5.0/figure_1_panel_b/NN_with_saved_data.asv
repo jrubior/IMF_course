@@ -67,7 +67,7 @@ plot(1:size(xxtest,2),uwnet,'color','b');
 corr(uwtest',uwnet')
 cov(uwtest,uwnet)
 
-save net.mat net xxtest yytest yy1test yy2test xxtrain yytrain yy1train yy2train 
+save net
 
 
 
