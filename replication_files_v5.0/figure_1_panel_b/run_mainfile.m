@@ -191,10 +191,10 @@ parfor record=1:nd
             
             case 'structural'
                 
-                
                 storevefh(record,1)   = (nvar*(nvar+1)/2)*log(2)-(2*nvar+m+1)*LogAbsDet(reshape(structpara(1:nvar*nvar),nvar,nvar));
                 storevegfhZ(record,1) = LogVolumeElement(fs,structpara,r); 
                 uw(record,1)          = exp(storevefh(record,1) - storevegfhZ(record,1));
+
                 
             case 'irfs'
                 
