@@ -55,7 +55,7 @@ hold on
 plot(1:size(xxtest,2),yynet,'color','b');
 
 
-corr(ytest',yynet')
+corr(yytest',yynet')
 
 
 
