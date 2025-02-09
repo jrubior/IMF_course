@@ -38,7 +38,7 @@ yytest=yy(:,traindim+1:end);
 yy1test=yy1(:,traindim+1:end);
 yy2test=log(yy2(:,traindim+1:end));
 
-yynet=zeros(1,size(xxtest,2));
+yy2net=zeros(1,size(xxtest,2));
 
 for i=1:size(xxtest,2)
 

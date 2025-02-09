@@ -151,10 +151,13 @@ cholOomegaTilde = hh(OomegaTilde)'; % this matrix is used to draw B|Sigma below
 
 %% initialize counters to track the state of the computations
 
+
 tic
+q = parallel.pool.DataQueue;
+afterEach(q, @(x) fprintf('Completed iteration %d\n', x));
 
 parfor record=1:nd
-    
+
     %% step 1 in Algorithm 2
     Sigmadraw     = iwishrnd(PphiTilde,nnuTilde);
     cholSigmadraw = hh(Sigmadraw)';
