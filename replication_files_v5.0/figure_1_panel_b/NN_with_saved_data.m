@@ -46,7 +46,6 @@ for i=1:size(xxtest,2)
 
 end
 
-errornet=abs(yytest-yynet);
 toc
 
 close all
