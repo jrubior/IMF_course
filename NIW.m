@@ -1,7 +1,7 @@
 close all
 clear
 clc
-T = 1000;
+T = 100;
 n_draws=100000;
 
 beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
