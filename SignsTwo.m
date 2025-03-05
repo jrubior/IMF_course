@@ -66,8 +66,11 @@ accLdraws=cell([n_draws,p+1]);
 
 %% Signs 
 
-S=zeros(1,n);
+ns=2;
+
+S=zeros(ns,n);
 S(1,1)=1; % first variable
+S(2,2)=2; % second variable
 ee=eye(n);
 shock=ee(:,2); % second shock
 
@@ -87,7 +90,7 @@ for i=1:n_draws
     Ldraws{i,1}=hh(draws{i,2})'*draws{i,3};
     Ldraws{i,2}=draws{i,1}(nex+1:nex+2,:)'*Ldraws{i,1};
 
-    if S*Ldraws{i,1}*shock > 0
+    if all(S*Ldraws{i,1}*shock > 0)
 
         accdraws{i,1}    = draws{i,1};
         accdraws{i,2}    = draws{i,2};
@@ -110,6 +113,23 @@ accAdraws = accAdraws(~cellfun(@isempty, accAdraws(:,1)), :);
 accLdraws = accLdraws(~cellfun(@isempty, accLdraws(:,1)), :);
 
 disp(['How many do we keep? ', num2str(size(accLdraws,1))]);
+
+
+
+% Plot histogram
+figure(1)
+subplot(1,2,1)
+entries = cellfun(@(x) x(1,2), accLdraws);
+histogram(entries);
+title('Histogram of (1,2) Entries from accLdraws');
+xlabel('Value');
+ylabel('Frequency');
+subplot(1,2,2)
+entries = cellfun(@(x) x(2,2), accLdraws);
+histogram(entries);
+title('Histogram of (1,2) Entries from accLdraws');
+xlabel('Value');
+ylabel('Frequency');
 
 
 function [Q,R] = DrawQ(n)
