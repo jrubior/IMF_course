@@ -64,12 +64,15 @@ accAdraws=cell([n_draws,2]);
 accLdraws=cell([n_draws,p+1]);
 
 
-%% Signs 
+%% Signs
 
 S=zeros(1,n);
 S(1,1)=1; % first variable
 ee=eye(n);
-shock=ee(:,2); % second shock
+shock=ee(:,1); % first shock
+
+Z=zeros(1,n);
+Z(1,2)=1; % second variable
 
 for i=1:n_draws
 
@@ -79,15 +82,54 @@ for i=1:n_draws
     Bdraw         = reshape(Bdraw,n*p+nex,n);
     draws{i,1}    = Bdraw;
     draws{i,2}    = Sigmadraw;
-    draws{i,3}    = DrawQ(n);
+    %draws{i,3}    = DrawQ(n);
+
+    Q = zeros(n, n);
+
+    j=1;
+
+    nz=size(Z,1);
+
+    x_j = randn(n + 1 - j-nz, 1);
+
+    % Normalize to get w_j
+    w_j = x_j / norm(x_j);
+
+    M_j = Z*hh(draws{i,2})';
+    K_j= null(M_j);
+
+    % Compute q_j
+    q_j = K_j * w_j;
+
+    % Store q_j in Q
+    Q(:, j) = q_j;
+
+
+    j=2;
+    nz=size(Z,1);
+
+    x_j = randn(n + 1 - j, 1);
+
+    % Normalize to get w_j
+    w_j = x_j / norm(x_j);
+
+    M_j = Q(:, 1:(j-1))';
+    K_j= null(M_j);
+
+    % Compute q_j
+    q_j = K_j * w_j;
+
+    % Store q_j in Q
+    Q(:, j) = q_j;
+
+
+    draws{i,3}= Q;
 
     Adraws{i,1}=hh(draws{i,2})\draws{i,3};
     Adraws{i,2}=draws{i,1}*Adraws{i,1};
 
     Ldraws{i,1}=hh(draws{i,2})'*draws{i,3};
     Ldraws{i,2}=draws{i,1}(nex+1:nex+2,:)'*Ldraws{i,1};
-
-    
 
 
     if S*Ldraws{i,1}*shock > 0
@@ -113,16 +155,4 @@ accAdraws = accAdraws(~cellfun(@isempty, accAdraws(:,1)), :);
 accLdraws = accLdraws(~cellfun(@isempty, accLdraws(:,1)), :);
 
 disp(['How many do we keep? ', num2str(size(accLdraws,1))]);
-
-
-function [Q,R] = DrawQ(n)
-X=randn(n,n);
-[Q,R]=qr(X);
-for i=1:n
-    if R(i,i) <0
-        Q(:,i)=-Q(:,i);
-        R(i,:)=-R(i,:);
-    end
-end
-end
 
