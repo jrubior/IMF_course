@@ -7,7 +7,6 @@ n_draws=100;
 beta_true = [0.1, 0.2; 0.9, 0.08; -0.03, 0.75]; % True coefficients: [c1 c2; beta11 beta21; beta12 beta22]
 sigma_u = [1.0, 0.5; 0.5, 1.0];       % Covariance matrix of errors
 
-
 p   = 1;            % number of lags
 n   = 2;            % number of endogenous variables
 nex = 1;            % set equal to 1 if a constant is included; 0 otherwise
